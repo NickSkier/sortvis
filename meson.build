@@ -3,7 +3,13 @@ project('sortvis', 'cpp',
   default_options : ['warning_level=3',
                      'cpp_std=c++14'])
 
+sortvis_deps = [
+  dependency('ncurses')
+]
+
 exe = executable('sortvis', 'sortvis.cpp',
-  install : true)
+  dependencies: sortvis_deps,
+  install : true,
+)
 
 test('basic', exe)
