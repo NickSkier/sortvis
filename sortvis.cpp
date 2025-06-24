@@ -76,7 +76,7 @@ void printNumberBar(std::vector<int> &vec) {
     
 std::vector<int> bubbleSort(std::vector<int> &vec) {
     for (size_t i = 0; i < vec.size()-1; ++i) {
-        for (size_t j = 0; j < vec.size()-1; ++j) {
+        for (size_t j = 0; j < vec.size()-1-i; ++j) {
             printChart(vec);
             napms(100);
             if (vec[j] > vec[j+1]) {
@@ -91,7 +91,7 @@ std::vector<int> selectionSort(std::vector<int> &vec) {
     size_t minIndex;
     for (size_t i = 0; i < vec.size()-1; ++i) {
         minIndex = i;
-        for (size_t j = i + 1; j < vec.size()-1; ++j) {
+        for (size_t j = i + 1; j < vec.size(); ++j) {
             printChart(vec);
             napms(100);
             if (vec[j] < vec[minIndex]) minIndex = j;
