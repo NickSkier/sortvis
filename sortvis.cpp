@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
-#include <regex>
 #include <string>
 #include <vector>
 #include <random>
@@ -62,8 +61,9 @@ void printChart(std::vector<int> &vec, size_t argAnimDelay) {
     printNumberBar(vec);
     for (size_t i = 0; i <  vectorSize; ++i) {
         for (size_t j = 0; j < vectorSize; ++j) {
-            if (j+1 <= vec[vectorSize-1-i]) mvprintw(j+1, i*2, "%s", emptyChartBlock.c_str());
-            else mvprintw(j+1, i*2, "%s", fullChartBlock.c_str());
+            if (j+1 >= vectorSize - vec[i]) mvprintw(j+1, i*2, "%s", fullChartBlock.c_str());
+            else mvprintw(j+1, i*2, "%s", emptyChartBlock.c_str());
+
         }
     }
     napms(animationDelay);
