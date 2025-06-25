@@ -1,6 +1,10 @@
+#include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <random>
+#include <numeric>
 #include <ncurses.h>
 
 #define PROJECT_NAME "sortvis"
@@ -8,48 +12,46 @@
 void printVector(std::vector<int> &vec);
 void printChart(std::vector<int> &vec);
 void printNumberBar(std::vector<int> &vec);
+std::vector<int> generateShuffledVector(size_t size);
 std::vector<int> selectionSort(std::vector<int> &vec);
 std::vector<int> bubbleSort(std::vector<int> &vec);
 
 int main(int argc, char **argv) {
-    if (argc == 1) {
-        std::cout << argv[0] <<  " takes arguments.\n";
-        return 1;
-    }
     initscr();
     keypad(stdscr, TRUE);
     noecho();
     curs_set(0);
     cbreak();
-    nodelay(stdscr, TRUE);
+    halfdelay(1);
 
-    std::vector<int> vec = {4, 3, 10, 2, 0, 9, 5, 1, 8, 6, 7};
+    size_t size = 20;
+    if (argc == 3) size = std::atoi(argv[2]);
+    std::vector<int> vec = generateShuffledVector(size);
+    printChart(vec);
 
     std::string argSortType = argv[1];
     if (argSortType == "--selection" || argSortType == "-s") {
-        printw( "Selection sort");
+        mvprintw(0, 0, "Selection sort");
         selectionSort(vec);
     }
     else if (argSortType == "--bubble" || argSortType == "-b") {
-        printw("Bubble sort");
+        mvprintw(0, 0, "Bubble sort");
         bubbleSort(vec);
     }
-    else if (argSortType == "--chart" || argSortType == "-c") {
-        printChart(vec);
-    }
+    printChart(vec);
 
     timeout(-1);
     getch();
     endwin();
-    
+
     return 0;
 }
 
 void printVector(std::vector<int> &vec) {
     for (int &val : vec) {   
-        std::cout << val;
+        printw("%d", val);
     }
-    std::cout << "\n";
+    refresh();
 }
 
 void printChart(std::vector<int> &vec) {
@@ -63,6 +65,7 @@ void printChart(std::vector<int> &vec) {
             else mvprintw(j+1, i*2, "%s", fullChartBlock.c_str());
         }
     }
+    napms(40);
     refresh();
 }
 
@@ -73,15 +76,24 @@ void printNumberBar(std::vector<int> &vec) {
     }
     refresh();
 }
-    
+
+std::vector<int> generateShuffledVector(size_t size) {
+    std::vector<int> vec(size);
+
+    std::iota(vec.begin(), vec.end(), 0);
+
+    std::random_device rd;
+    std::mt19937 engine(rd());
+    std::shuffle(vec.begin(), vec.end(), engine);
+
+    return vec;
+}
+
 std::vector<int> bubbleSort(std::vector<int> &vec) {
     for (size_t i = 0; i < vec.size()-1; ++i) {
         for (size_t j = 0; j < vec.size()-1-i; ++j) {
+            if (vec[j] > vec[j+1]) std::swap(vec[j], vec[j+1]);
             printChart(vec);
-            napms(100);
-            if (vec[j] > vec[j+1]) {
-                std::swap(vec[j], vec[j+1]);
-            }
         }
     }
     return vec;
@@ -92,9 +104,8 @@ std::vector<int> selectionSort(std::vector<int> &vec) {
     for (size_t i = 0; i < vec.size()-1; ++i) {
         minIndex = i;
         for (size_t j = i + 1; j < vec.size(); ++j) {
-            printChart(vec);
-            napms(100);
             if (vec[j] < vec[minIndex]) minIndex = j;
+            printChart(vec);
         }
         std::swap(vec[i], vec[minIndex]);
     }
