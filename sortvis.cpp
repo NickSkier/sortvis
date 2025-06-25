@@ -10,7 +10,7 @@
 #define PROJECT_NAME "sortvis"
 
 void printVector(std::vector<int> &vec);
-void printChart(std::vector<int> &vec);
+void printChart(std::vector<int> &vec, size_t argAnimDelay = 0);
 void printNumberBar(std::vector<int> &vec);
 std::vector<int> generateShuffledVector(size_t size);
 std::vector<int> selectionSort(std::vector<int> &vec);
@@ -25,9 +25,11 @@ int main(int argc, char **argv) {
     halfdelay(1);
 
     size_t size = 20;
-    if (argc == 3) size = std::atoi(argv[2]);
+    if (argc >= 3) size = std::atoi(argv[2]);
     std::vector<int> vec = generateShuffledVector(size);
-    printChart(vec);
+    size_t angAnimDelay = 0;
+    if (argc == 4) angAnimDelay = std::atoi(argv[3]);
+    printChart(vec, angAnimDelay);
 
     std::string argSortType = argv[1];
     if (argSortType == "--selection" || argSortType == "-s") {
@@ -54,7 +56,8 @@ void printVector(std::vector<int> &vec) {
     refresh();
 }
 
-void printChart(std::vector<int> &vec) {
+void printChart(std::vector<int> &vec, size_t argAnimDelay) {
+    static size_t animationDelay = argAnimDelay;
     std::string fullChartBlock = "[]";
     std::string emptyChartBlock = "  ";
     size_t vectorSize = vec.size();
@@ -65,7 +68,7 @@ void printChart(std::vector<int> &vec) {
             else mvprintw(j+1, i*2, "%s", fullChartBlock.c_str());
         }
     }
-    napms(40);
+    napms(animationDelay);
     refresh();
 }
 
