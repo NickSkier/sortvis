@@ -8,9 +8,15 @@
 #include <ncurses.h>
 
 #define PROJECT_NAME "sortvis"
+#define COLOR_ORANGE 3
+#define HIGHLIGHT_1 1
+#define HIGHLIGHT_2 2
+#define HIGHLIGHT_3 3
+#define PLAIN 8
 
 void printVector(std::vector<int> &vec);
-void printChart(std::vector<int> &vec, size_t argAnimDelay = 0);
+void highlightAttrOn(size_t color);
+void printChart(std::vector<int> &vec, size_t highlight_1 = -1, size_t highlight_2 = -1, size_t highlight_3 = -1, size_t argAnimDelay = 0);
 void printNumberBar(std::vector<int> &vec);
 void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
 void printFinalStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
@@ -25,13 +31,20 @@ int main(int argc, char **argv) {
     curs_set(0);
     cbreak();
     halfdelay(1);
+    start_color();
+
+    init_color(COLOR_ORANGE, 1000, 300, 0);
+    init_pair(HIGHLIGHT_1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(HIGHLIGHT_2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(HIGHLIGHT_3, COLOR_ORANGE, COLOR_BLACK);
+    init_pair(PLAIN, COLOR_WHITE, COLOR_BLACK);
 
     size_t size = 20;
     if (argc >= 3) size = std::atoi(argv[2]);
     std::vector<int> vec = generateShuffledVector(size);
     size_t angAnimDelay = 0;
     if (argc == 4) angAnimDelay = std::atoi(argv[3]);
-    printChart(vec, angAnimDelay);
+    printChart(vec, -1, -1, -1, angAnimDelay);
 
     std::string argSortType = argv[1];
     if (argSortType == "--selection" || argSortType == "-s") {
@@ -53,18 +66,27 @@ void printVector(std::vector<int> &vec) {
     refresh();
 }
 
-void printChart(std::vector<int> &vec, size_t argAnimDelay) {
+void highlightAttrOn(size_t color) {
+    attron(A_BOLD);
+    attron(COLOR_PAIR(color));
+}
+
+void printChart(std::vector<int> &vec, size_t highlight_1, size_t highlight_2, size_t highlight_3, size_t argAnimDelay) {
     static size_t animationDelay = argAnimDelay;
     std::string fullChartBlock = "[]";
     std::string emptyChartBlock = "  ";
     size_t vectorSize = vec.size();
     printNumberBar(vec);
     for (size_t i = 0; i <  vectorSize; ++i) {
+        if (highlight_1 == i) highlightAttrOn(1);
+        if (highlight_2 == i) highlightAttrOn(2);
+        if (highlight_3 == i) highlightAttrOn(3);
         for (size_t j = 0; j < vectorSize; ++j) {
             if (j+1 >= vectorSize - vec[i]) mvprintw(j+1, i*2, "%s", fullChartBlock.c_str());
             else mvprintw(j+1, i*2, "%s", emptyChartBlock.c_str());
-
         }
+        attroff(A_BOLD);
+        attron(COLOR_PAIR(PLAIN));
     }
     napms(animationDelay);
     refresh();
@@ -114,7 +136,7 @@ std::vector<int> bubbleSort(std::vector<int> &vec) {
                 swapCounter++;
                 arrayAccessCounter += 4;
             }
-            printChart(vec);
+            printChart(vec, j, i, j+1);
             printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
         }
     }
@@ -130,17 +152,19 @@ std::vector<int> selectionSort(std::vector<int> &vec) {
     size_t arrayAccessCounter = 0;
     size_t vectorSize = vec.size();
     size_t minIndex;
+    size_t lastSwapedIndex = vectorSize;
     for (size_t i = 0; i < vectorSize-1; ++i) {
         minIndex = i;
         for (size_t j = i + 1; j < vectorSize; ++j) {
             comparisonsCounter++;
             arrayAccessCounter += 2;
             if (vec[j] < vec[minIndex]) minIndex = j;
-            printChart(vec);
+            printChart(vec, lastSwapedIndex, j, minIndex);
             printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
         }
         if (i != minIndex) {
             std::swap(vec[i], vec[minIndex]);
+            lastSwapedIndex = i;
             swapCounter++;
             arrayAccessCounter += 4;
         }
