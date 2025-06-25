@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <vector>
 #include <random>
@@ -12,6 +13,8 @@
 void printVector(std::vector<int> &vec);
 void printChart(std::vector<int> &vec, size_t argAnimDelay = 0);
 void printNumberBar(std::vector<int> &vec);
+void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
+void printFinalStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
 std::vector<int> generateShuffledVector(size_t size);
 std::vector<int> selectionSort(std::vector<int> &vec);
 std::vector<int> bubbleSort(std::vector<int> &vec);
@@ -33,17 +36,12 @@ int main(int argc, char **argv) {
 
     std::string argSortType = argv[1];
     if (argSortType == "--selection" || argSortType == "-s") {
-        mvprintw(0, 0, "Selection sort");
         selectionSort(vec);
     }
     else if (argSortType == "--bubble" || argSortType == "-b") {
-        mvprintw(0, 0, "Bubble sort");
         bubbleSort(vec);
     }
-    printChart(vec);
 
-    timeout(-1);
-    getch();
     endwin();
 
     return 0;
@@ -80,6 +78,15 @@ void printNumberBar(std::vector<int> &vec) {
     refresh();
 }
 
+void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter) {
+    mvprintw(0, 0, "%s - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisonsCounter, swapCounter, arrayAccessCounter);
+}
+
+void printFinalStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter) {
+    endwin();
+    std::cout << sortName << " - " << comparisonsCounter << " comparisons, " << swapCounter << " swaps, " << arrayAccessCounter <<  " array accesses" << std::endl;
+}
+
 std::vector<int> generateShuffledVector(size_t size) {
     std::vector<int> vec(size);
 
@@ -93,24 +100,52 @@ std::vector<int> generateShuffledVector(size_t size) {
 }
 
 std::vector<int> bubbleSort(std::vector<int> &vec) {
-    for (size_t i = 0; i < vec.size()-1; ++i) {
-        for (size_t j = 0; j < vec.size()-1-i; ++j) {
-            if (vec[j] > vec[j+1]) std::swap(vec[j], vec[j+1]);
+    std::string sortName = "Bubble sort";
+    size_t comparisonsCounter = 0;
+    size_t swapCounter = 0;
+    size_t arrayAccessCounter = 0;
+    size_t vectorSize = vec.size();
+    for (size_t i = 0; i < vectorSize-1; ++i) {
+        for (size_t j = 0; j < vectorSize-1-i; ++j) {
+            comparisonsCounter++;
+            arrayAccessCounter += 2;
+            if (vec[j] > vec[j+1]) {
+                std::swap(vec[j], vec[j+1]);
+                swapCounter++;
+                arrayAccessCounter += 4;
+            }
             printChart(vec);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
         }
     }
+    printChart(vec);
+    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
     return vec;
 }
 
 std::vector<int> selectionSort(std::vector<int> &vec) {
+    std::string sortName = "Selection sort";
+    size_t comparisonsCounter = 0;
+    size_t swapCounter = 0;
+    size_t arrayAccessCounter = 0;
+    size_t vectorSize = vec.size();
     size_t minIndex;
-    for (size_t i = 0; i < vec.size()-1; ++i) {
+    for (size_t i = 0; i < vectorSize-1; ++i) {
         minIndex = i;
-        for (size_t j = i + 1; j < vec.size(); ++j) {
+        for (size_t j = i + 1; j < vectorSize; ++j) {
+            comparisonsCounter++;
+            arrayAccessCounter += 2;
             if (vec[j] < vec[minIndex]) minIndex = j;
             printChart(vec);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
         }
-        std::swap(vec[i], vec[minIndex]);
+        if (i != minIndex) {
+            std::swap(vec[i], vec[minIndex]);
+            swapCounter++;
+            arrayAccessCounter += 4;
+        }
     }
+    printChart(vec);
+    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
     return vec;
 }
