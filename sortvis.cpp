@@ -8,14 +8,11 @@
 #include <ncurses.h>
 
 #define PROJECT_NAME "sortvis"
-#define COLOR_ORANGE 3
-#define HIGHLIGHT_1 1
-#define HIGHLIGHT_2 2
-#define HIGHLIGHT_3 3
-#define PLAIN 8
+#define HIGHLIGHT_1 34    // Green
+#define HIGHLIGHT_2 4     // Blue
+#define HIGHLIGHT_3 202   // Orange
 
 void printVector(std::vector<int> &vec);
-void highlightAttrOn(size_t color);
 void printChart(std::vector<int> &vec, size_t highlight_1 = -1, size_t highlight_2 = -1, size_t highlight_3 = -1, size_t argAnimDelay = 0);
 void printNumberBar(std::vector<int> &vec);
 void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
@@ -34,11 +31,9 @@ int main(int argc, char **argv) {
     halfdelay(1);
     start_color();
 
-    init_color(COLOR_ORANGE, 1000, 300, 0);
-    init_pair(HIGHLIGHT_1, COLOR_GREEN, COLOR_BLACK);
-    init_pair(HIGHLIGHT_2, COLOR_BLUE, COLOR_BLACK);
-    init_pair(HIGHLIGHT_3, COLOR_ORANGE, COLOR_BLACK);
-    init_pair(PLAIN, COLOR_WHITE, COLOR_BLACK);
+    init_pair(HIGHLIGHT_1, HIGHLIGHT_1, COLOR_BLACK);
+    init_pair(HIGHLIGHT_2, HIGHLIGHT_2, COLOR_BLACK);
+    init_pair(HIGHLIGHT_3, HIGHLIGHT_3, COLOR_BLACK);
 
     size_t size = 20;
     if (argc >= 3) size = std::atoi(argv[2]);
@@ -70,11 +65,6 @@ void printVector(std::vector<int> &vec) {
     refresh();
 }
 
-void highlightAttrOn(size_t color) {
-    attron(A_BOLD);
-    attron(COLOR_PAIR(color));
-}
-
 void printChart(std::vector<int> &vec, size_t highlight_1, size_t highlight_2, size_t highlight_3, size_t argAnimDelay) {
     static size_t animationDelay = argAnimDelay;
     std::string fullChartBlock = "[]";
@@ -82,18 +72,20 @@ void printChart(std::vector<int> &vec, size_t highlight_1, size_t highlight_2, s
     size_t vectorSize = vec.size();
     printNumberBar(vec);
     for (size_t i = 0; i <  vectorSize; ++i) {
-        if (highlight_1 == i) highlightAttrOn(1);
-        if (highlight_2 == i) highlightAttrOn(2);
-        if (highlight_3 == i) highlightAttrOn(3);
+        if (highlight_1 == i) attron(COLOR_PAIR(HIGHLIGHT_1) | A_BOLD);
+        if (highlight_2 == i) attron(COLOR_PAIR(HIGHLIGHT_2) | A_BOLD);
+        if (highlight_3 == i) attron(COLOR_PAIR(HIGHLIGHT_3) | A_BOLD);
         for (size_t j = 0; j < vectorSize; ++j) {
             if (j+1 >= vectorSize - vec[i]) mvprintw(j+1, i*2, "%s", fullChartBlock.c_str());
-            else mvprintw(j+1, i*2, "%s", emptyChartBlock.c_str());
+            else {
+                mvprintw(j+1, i*2, "%s", emptyChartBlock.c_str());
+            }
         }
-        attroff(A_BOLD);
-        attron(COLOR_PAIR(PLAIN));
+        attrset(A_NORMAL);
     }
-    napms(animationDelay);
+    attrset(A_NORMAL);
     refresh();
+    napms(animationDelay);
 }
 
 void printNumberBar(std::vector<int> &vec) {
@@ -101,7 +93,6 @@ void printNumberBar(std::vector<int> &vec) {
         for (size_t i = 0; i < vectorSize; ++i) {
         mvprintw(i+1, vectorSize*2+1, "%-*ld", 3, vectorSize-1-i);
     }
-    refresh();
 }
 
 void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter) {
