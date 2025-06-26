@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -13,6 +14,7 @@
 #define HIGHLIGHT_2 4    // Blue
 #define HIGHLIGHT_3 1    // Red
 
+bool isValidNumericArgument(const char* argStr);
 void printVector(std::vector<int> &vec);
 void printChart(std::vector<int> &vec, size_t highlight_1 = -1, size_t highlight_2 = -1, size_t highlight_3 = -1, size_t argAnimDelay = 0);
 void printNumberBar(std::vector<int> &vec);
@@ -24,10 +26,29 @@ std::vector<int> bubbleSort(std::vector<int> &vec);
 std::vector<int> insertionSort(std::vector<int> &vec);
 
 int main(int argc, char **argv) {
+    size_t size = 20;
+    size_t argAnimationDelay = 0;
+
     if (argc == 1) {
         std::cout << PROJECT_NAME << ": You must specify at least one argument\n";
         return 1;
     }
+    if (argc >= 3) {
+        if (isValidNumericArgument(argv[2])) size = std::stoi(argv[2]);
+        else {
+            std::cout << PROJECT_NAME << ": must be a numeric argument -- '" << argv[2] << "'\n";
+            return 1;
+        }
+    }
+    if (argc >= 4) {
+        if (isValidNumericArgument(argv[3])) argAnimationDelay = std::stoi(argv[3]);
+        else {
+            std::cout << PROJECT_NAME << ": must be a numeric argument -- '" << argv[3] << "'\n";
+            return 1;
+        }
+    }
+       
+    std::vector<int> vec = generateShuffledVector(size);
 
     initscr();
     keypad(stdscr, TRUE);
@@ -42,12 +63,7 @@ int main(int argc, char **argv) {
     init_pair(HIGHLIGHT_2, HIGHLIGHT_2, HIGHLIGHT_2);
     init_pair(HIGHLIGHT_3, HIGHLIGHT_3, HIGHLIGHT_3);
 
-    size_t size = 20;
-    if (argc >= 3) size = std::atoi(argv[2]);
-    std::vector<int> vec = generateShuffledVector(size);
-    size_t angAnimDelay = 0;
-    if (argc == 4) angAnimDelay = std::atoi(argv[3]);
-    printChart(vec, -1, -1, -1, angAnimDelay);
+    printChart(vec, -1, -1, -1, argAnimationDelay);
 
     std::string argSortType = argv[1];
     if (argSortType == "--bubble" || argSortType == "-b") {
@@ -68,6 +84,22 @@ int main(int argc, char **argv) {
     endwin();
 
     return 0;
+}
+
+bool isValidNumericArgument(const char* argStr) {
+    if (argStr == nullptr || *argStr == '\0') return false;
+
+    char* endptr;
+    strtol(argStr, &endptr, 10);
+
+    if (endptr == argStr) return false;
+    // if ((errno == ERANGE && (val == LONG_MAX
+    while (*endptr != '\0') {
+        if (!std::isspace(static_cast<unsigned char>(*endptr))) return false;
+        endptr++;
+    }
+    
+    return true;
 }
 
 void printVector(std::vector<int> &vec) {
