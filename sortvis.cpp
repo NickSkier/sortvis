@@ -16,7 +16,6 @@
 
 void initNcurses();
 bool isValidNumericArgument(const char* argStr);
-void printVector(std::vector<int> &vec);
 void printChart(const std::vector<int> &vec, const size_t highlight_1 = -1, const size_t highlight_2 = -1, const size_t highlight_3 = -1, const size_t argAnimDelay = 0);
 void printNumberBar(const std::vector<int> &vec);
 void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
@@ -105,13 +104,6 @@ bool isValidNumericArgument(const char* argStr) {
     }
     
     return true;
-}
-
-void printVector(std::vector<int> &vec) {
-    for (int &val : vec) {   
-        printw("%d", val);
-    }
-    refresh();
 }
 
 void printChart(const std::vector<int> &vec, const size_t highlight_1, const size_t highlight_2, const size_t highlight_3, const size_t argAnimDelay) {
