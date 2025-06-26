@@ -24,6 +24,11 @@ std::vector<int> bubbleSort(std::vector<int> &vec);
 std::vector<int> insertionSort(std::vector<int> &vec);
 
 int main(int argc, char **argv) {
+    if (argc == 1) {
+        std::cout << PROJECT_NAME << ": You must specify at least one argument\n";
+        return 1;
+    }
+
     initscr();
     keypad(stdscr, TRUE);
     noecho();
@@ -45,14 +50,19 @@ int main(int argc, char **argv) {
     printChart(vec, -1, -1, -1, angAnimDelay);
 
     std::string argSortType = argv[1];
-    if (argSortType == "--selection" || argSortType == "-s") {
-        selectionSort(vec);
-    }
-    else if (argSortType == "--bubble" || argSortType == "-b") {
+    if (argSortType == "--bubble" || argSortType == "-b") {
         bubbleSort(vec);
+    }
+    else if (argSortType == "--selection" || argSortType == "-s") {
+        selectionSort(vec);
     }
     else if (argSortType == "--insertion" || argSortType == "-i") {
         insertionSort(vec);
+    }
+    else {
+        endwin();
+        std::cout << PROJECT_NAME << ": invalid option '" << argv[1] << "'\n";
+        return 1;
     }
 
     endwin();
