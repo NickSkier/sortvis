@@ -14,6 +14,7 @@
 #define HIGHLIGHT_2 4    // Blue
 #define HIGHLIGHT_3 1    // Red
 
+void initNcurses();
 bool isValidNumericArgument(const char* argStr);
 void printVector(std::vector<int> &vec);
 void printChart(std::vector<int> &vec, size_t highlight_1 = -1, size_t highlight_2 = -1, size_t highlight_3 = -1, size_t argAnimDelay = 0);
@@ -47,21 +48,10 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
-       
+
     std::vector<int> vec = generateShuffledVector(size);
 
-    initscr();
-    keypad(stdscr, TRUE);
-    noecho();
-    curs_set(0);
-    cbreak();
-    halfdelay(1);
-    start_color();
-
-    init_pair(HIGHLIGHT_BAR, COLOR_WHITE, COLOR_WHITE);
-    init_pair(HIGHLIGHT_1, HIGHLIGHT_1, HIGHLIGHT_1);
-    init_pair(HIGHLIGHT_2, HIGHLIGHT_2, HIGHLIGHT_2);
-    init_pair(HIGHLIGHT_3, HIGHLIGHT_3, HIGHLIGHT_3);
+    initNcurses();
 
     printChart(vec, -1, -1, -1, argAnimationDelay);
 
@@ -84,6 +74,21 @@ int main(int argc, char **argv) {
     endwin();
 
     return 0;
+}
+
+void initNcurses() {
+    initscr();
+    keypad(stdscr, TRUE);
+    noecho();
+    curs_set(0);
+    cbreak();
+    halfdelay(1);
+    start_color();
+
+    init_pair(HIGHLIGHT_BAR, COLOR_WHITE, COLOR_WHITE);
+    init_pair(HIGHLIGHT_1, HIGHLIGHT_1, HIGHLIGHT_1);
+    init_pair(HIGHLIGHT_2, HIGHLIGHT_2, HIGHLIGHT_2);
+    init_pair(HIGHLIGHT_3, HIGHLIGHT_3, HIGHLIGHT_3);
 }
 
 bool isValidNumericArgument(const char* argStr) {
