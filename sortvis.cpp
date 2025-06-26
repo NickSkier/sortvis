@@ -23,6 +23,7 @@ void printFinalStats(std::string &sortName, size_t &comparisonsCounter, size_t a
 std::vector<int> generateShuffledVector(size_t size);
 std::vector<int> selectionSort(std::vector<int> &vec);
 std::vector<int> bubbleSort(std::vector<int> &vec);
+std::vector<int> insertionSort(std::vector<int> &vec);
 
 int main(int argc, char **argv) {
     initscr();
@@ -52,6 +53,9 @@ int main(int argc, char **argv) {
     }
     else if (argSortType == "--bubble" || argSortType == "-b") {
         bubbleSort(vec);
+    }
+    else if (argSortType == "--insertion" || argSortType == "-i") {
+        insertionSort(vec);
     }
 
     endwin();
@@ -168,6 +172,39 @@ std::vector<int> selectionSort(std::vector<int> &vec) {
             swapCounter++;
             arrayAccessCounter += 4;
         }
+    }
+    printChart(vec);
+    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+    return vec;
+}
+
+std::vector<int> insertionSort(std::vector<int> &vec) {
+    std::string sortName = "Insertion sort";
+    size_t comparisonsCounter = 0;
+    size_t swapCounter = 0;
+    size_t arrayAccessCounter = 0;
+    size_t vectorSize = vec.size();
+    int key, j;
+    for (size_t i = 1; i < vectorSize; ++i) {
+        key = vec[i];
+        arrayAccessCounter++;
+        j = i - 1;
+        while (j >= 0 && vec[j] > key) {
+            comparisonsCounter++;
+            arrayAccessCounter++;
+            vec[j+1] = vec[j];
+            arrayAccessCounter += 2;
+            vec[j] = key; // arrayAccessCounter shouldn't be incremented as this is only used for visualization
+            printChart(vec, j, i, j+1);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+            j--;
+        }
+        if (j >= 0) {
+            comparisonsCounter++;
+            arrayAccessCounter++;
+        }
+        vec[j+1] = key;
+        arrayAccessCounter++;
     }
     printChart(vec);
     printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
