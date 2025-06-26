@@ -17,11 +17,11 @@
 void initNcurses();
 bool isValidNumericArgument(const char* argStr);
 void printVector(std::vector<int> &vec);
-void printChart(std::vector<int> &vec, size_t highlight_1 = -1, size_t highlight_2 = -1, size_t highlight_3 = -1, size_t argAnimDelay = 0);
-void printNumberBar(std::vector<int> &vec);
-void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
-void printFinalStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
-std::vector<int> generateShuffledVector(size_t size);
+void printChart(const std::vector<int> &vec, const size_t highlight_1 = -1, const size_t highlight_2 = -1, const size_t highlight_3 = -1, const size_t argAnimDelay = 0);
+void printNumberBar(const std::vector<int> &vec);
+void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
+void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
+std::vector<int> generateShuffledVector(const size_t size);
 void selectionSort(std::vector<int> &vec);
 void bubbleSort(std::vector<int> &vec);
 void insertionSort(std::vector<int> &vec);
@@ -114,7 +114,7 @@ void printVector(std::vector<int> &vec) {
     refresh();
 }
 
-void printChart(std::vector<int> &vec, size_t highlight_1, size_t highlight_2, size_t highlight_3, size_t argAnimDelay) {
+void printChart(const std::vector<int> &vec, const size_t highlight_1, const size_t highlight_2, const size_t highlight_3, const size_t argAnimDelay) {
     static size_t animationDelay = argAnimDelay;
     chtype highlightAttr;
     size_t vectorSize = vec.size();
@@ -139,7 +139,7 @@ void printChart(std::vector<int> &vec, size_t highlight_1, size_t highlight_2, s
     napms(animationDelay);
 }
 
-void printNumberBar(std::vector<int> &vec) {
+void printNumberBar(const std::vector<int> &vec) {
     size_t vectorSize = vec.size();
     attron(A_BOLD);
     for (size_t i = 0; i < vectorSize; ++i) {
@@ -148,16 +148,16 @@ void printNumberBar(std::vector<int> &vec) {
     attroff(A_BOLD);
 }
 
-void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter) {
+void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter) {
     mvprintw(0, 0, "%s - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisonsCounter, swapCounter, arrayAccessCounter);
 }
 
-void printFinalStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter) {
+void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter) {
     endwin();
     std::cout << sortName << " - " << comparisonsCounter << " comparisons, " << swapCounter << " swaps, " << arrayAccessCounter <<  " array accesses" << std::endl;
 }
 
-std::vector<int> generateShuffledVector(size_t size) {
+std::vector<int> generateShuffledVector(const size_t size) {
     std::vector<int> vec(size);
 
     std::iota(vec.begin(), vec.end(), 0);
