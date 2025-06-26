@@ -22,9 +22,9 @@ void printNumberBar(std::vector<int> &vec);
 void printStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
 void printFinalStats(std::string &sortName, size_t &comparisonsCounter, size_t arrayAccessCounter, size_t swapCounter);
 std::vector<int> generateShuffledVector(size_t size);
-std::vector<int> selectionSort(std::vector<int> &vec);
-std::vector<int> bubbleSort(std::vector<int> &vec);
-std::vector<int> insertionSort(std::vector<int> &vec);
+void selectionSort(std::vector<int> &vec);
+void bubbleSort(std::vector<int> &vec);
+void insertionSort(std::vector<int> &vec);
 
 int main(int argc, char **argv) {
     size_t size = 20;
@@ -169,7 +169,7 @@ std::vector<int> generateShuffledVector(size_t size) {
     return vec;
 }
 
-std::vector<int> bubbleSort(std::vector<int> &vec) {
+void bubbleSort(std::vector<int> &vec) {
     std::string sortName = "Bubble sort";
     size_t comparisonsCounter = 0;
     size_t swapCounter = 0;
@@ -190,10 +190,9 @@ std::vector<int> bubbleSort(std::vector<int> &vec) {
     }
     printChart(vec);
     printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-    return vec;
 }
 
-std::vector<int> selectionSort(std::vector<int> &vec) {
+void selectionSort(std::vector<int> &vec) {
     std::string sortName = "Selection sort";
     size_t comparisonsCounter = 0;
     size_t swapCounter = 0;
@@ -219,10 +218,9 @@ std::vector<int> selectionSort(std::vector<int> &vec) {
     }
     printChart(vec);
     printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-    return vec;
 }
 
-std::vector<int> insertionSort(std::vector<int> &vec) {
+void insertionSort(std::vector<int> &vec) {
     std::string sortName = "Insertion sort";
     size_t comparisonsCounter = 0;
     size_t swapCounter = 0;
@@ -252,5 +250,4 @@ std::vector<int> insertionSort(std::vector<int> &vec) {
     }
     printChart(vec);
     printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-    return vec;
 }
