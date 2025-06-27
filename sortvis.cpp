@@ -13,15 +13,18 @@
 #define HIGHLIGHT_1 2    // Green
 #define HIGHLIGHT_2 4    // Blue
 #define HIGHLIGHT_3 1    // Red
+#define HIGHLIGHT_4 5    // Magenta
+#define HIGHLIGHT_5 11   // Yellow
 
 void initNcurses();
 bool isValidNumericArgument(const char* argStr);
-void printChart(const std::vector<int> &vec, const size_t highlight_1 = -1, const size_t highlight_2 = -1, const size_t highlight_3 = -1, const size_t argAnimDelay = 0);
+void printChart(const std::vector<int> &vec, const size_t highlight_1 = -1, const size_t highlight_2 = -1, const size_t highlight_3 = -1, const size_t highlight_4 = -1, const size_t highlight_5 = -1, const size_t argAnimDelay = 0);
 void printNumberBar(const std::vector<int> &vec);
 void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
 void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
 std::vector<int> generateShuffledVector(const size_t size);
 void selectionSort(std::vector<int> &vec);
+void doubleSelectionSort(std::vector<int> &vec);
 void bubbleSort(std::vector<int> &vec);
 void insertionSort(std::vector<int> &vec);
 
@@ -52,7 +55,7 @@ int main(int argc, char **argv) {
 
     initNcurses();
 
-    printChart(vec, -1, -1, -1, argAnimationDelay);
+    printChart(vec, -1, -1, -1, -1, -1, argAnimationDelay);
 
     std::string argSortType = argv[1];
     if (argSortType == "--bubble" || argSortType == "-b") {
@@ -60,6 +63,9 @@ int main(int argc, char **argv) {
     }
     else if (argSortType == "--selection" || argSortType == "-s") {
         selectionSort(vec);
+    }
+    else if (argSortType == "--double-selection" || argSortType == "-ds") {
+        doubleSelectionSort(vec);
     }
     else if (argSortType == "--insertion" || argSortType == "-i") {
         insertionSort(vec);
@@ -88,6 +94,8 @@ void initNcurses() {
     init_pair(HIGHLIGHT_1, HIGHLIGHT_1, HIGHLIGHT_1);
     init_pair(HIGHLIGHT_2, HIGHLIGHT_2, HIGHLIGHT_2);
     init_pair(HIGHLIGHT_3, HIGHLIGHT_3, HIGHLIGHT_3);
+    init_pair(HIGHLIGHT_4, HIGHLIGHT_4, HIGHLIGHT_4);
+    init_pair(HIGHLIGHT_5, HIGHLIGHT_5, HIGHLIGHT_5);
 }
 
 bool isValidNumericArgument(const char* argStr) {
@@ -106,7 +114,7 @@ bool isValidNumericArgument(const char* argStr) {
     return true;
 }
 
-void printChart(const std::vector<int> &vec, const size_t highlight_1, const size_t highlight_2, const size_t highlight_3, const size_t argAnimDelay) {
+void printChart(const std::vector<int> &vec, const size_t highlight_1, const size_t highlight_2, const size_t highlight_3, const size_t highlight_4, const size_t highlight_5, const size_t argAnimDelay) {
     static size_t animationDelay = argAnimDelay;
     chtype highlightAttr;
     size_t vectorSize = vec.size();
@@ -116,6 +124,8 @@ void printChart(const std::vector<int> &vec, const size_t highlight_1, const siz
         if (highlight_1 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_1);
         else if (highlight_2 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_2);
         else if (highlight_3 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_3);
+        else if (highlight_4 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_4);
+        else if (highlight_5 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_5);
         else highlightAttr = COLOR_PAIR(HIGHLIGHT_BAR);
 
         barHeight = vec[i];
@@ -195,15 +205,54 @@ void selectionSort(std::vector<int> &vec) {
     for (size_t i = 0; i < vectorSize-1; ++i) {
         minIndex = i;
         for (size_t j = i + 1; j < vectorSize; ++j) {
+            printChart(vec, lastSwapedIndex, minIndex, j);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
             comparisonsCounter++;
             arrayAccessCounter += 2;
             if (vec[j] < vec[minIndex]) minIndex = j;
-            printChart(vec, lastSwapedIndex, minIndex, j);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
         }
         if (i != minIndex) {
             std::swap(vec[i], vec[minIndex]);
             lastSwapedIndex = i;
+            swapCounter++;
+            arrayAccessCounter += 4;
+        }
+    }
+    printChart(vec);
+    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+}
+
+void doubleSelectionSort(std::vector<int> &vec) {
+    std::string sortName = "Double selection sort";
+    size_t comparisonsCounter = 0;
+    size_t swapCounter = 0;
+    size_t arrayAccessCounter = 0;
+    size_t vectorSize = vec.size();
+    size_t minIndex, maxIndex;
+    size_t lastSwapedMinIndex = vectorSize;
+    size_t lastSwapedMaxIndex = vectorSize;
+    std::string wasSwapedStr = "false";
+    for (size_t i = 0; i < vectorSize/2+1; ++i) {
+        minIndex = i;
+        maxIndex = i;
+        for (size_t j = i; j < vectorSize - i; ++j) {
+            printChart(vec, lastSwapedMinIndex, minIndex, j, maxIndex, lastSwapedMaxIndex);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+            comparisonsCounter += 2;
+            arrayAccessCounter += 4;
+            if (vec[j] < vec[minIndex]) minIndex = j;
+            if (vec[j] > vec[maxIndex]) maxIndex = j;
+        }
+        if (i != minIndex) {
+            if (i == maxIndex) maxIndex = minIndex;
+            std::swap(vec[i], vec[minIndex]);
+            lastSwapedMinIndex = i;
+            swapCounter++;
+            arrayAccessCounter += 4;
+        }
+        if (vectorSize - i != maxIndex) {
+            std::swap(vec[vectorSize-i-1], vec[maxIndex]);
+            lastSwapedMaxIndex = vectorSize-i-1;
             swapCounter++;
             arrayAccessCounter += 4;
         }
