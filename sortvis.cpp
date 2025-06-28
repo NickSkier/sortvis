@@ -130,12 +130,11 @@ void printChart(const std::vector<int> &vec, const size_t highlightGreen, const 
         barHeight = vec[i];
         emptyHeight = vectorSize - barHeight;
 
-        attrset(A_NORMAL);
-        for (size_t j = 0; j < emptyHeight; ++j) mvprintw(j+1, i*2, "  ");
         attrset(highlightAttr);
-        for (size_t j = emptyHeight; j < vectorSize; ++j) mvprintw(j+1, i*2, "[]");
+        for (size_t j = emptyHeight; j <= vectorSize; ++j) mvprintw(j, i*2, "[]");
+        attrset(A_NORMAL);
+        for (size_t j = 0; j < emptyHeight-1; ++j) mvprintw(j+1, i*2, "  ");
     }
-    attrset(A_NORMAL);
     refresh();
     napms(animationDelay);
 }
