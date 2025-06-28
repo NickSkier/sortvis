@@ -9,16 +9,16 @@
 #include <ncurses.h>
 
 #define PROJECT_NAME "sortvis"
-#define HIGHLIGHT_BAR 7  // White bar
-#define HIGHLIGHT_1 2    // Green
-#define HIGHLIGHT_2 4    // Blue
-#define HIGHLIGHT_3 1    // Red
-#define HIGHLIGHT_4 5    // Magenta
-#define HIGHLIGHT_5 11   // Yellow
+#define HIGHLIGHT_WHITE 7      // White bar
+#define HIGHLIGHT_GREEN 2      // Green
+#define HIGHLIGHT_BLUE 4       // Blue
+#define HIGHLIGHT_RED 1        // Red
+#define HIGHLIGHT_MAGENTA 5    // Magenta
+#define HIGHLIGHT_YELLOW 11    // Yellow
 
 void initNcurses();
 bool isValidNumericArgument(const char* argStr);
-void printChart(const std::vector<int> &vec, const size_t highlight_1 = -1, const size_t highlight_2 = -1, const size_t highlight_3 = -1, const size_t highlight_4 = -1, const size_t highlight_5 = -1, const size_t argAnimDelay = 0);
+void printChart(const std::vector<int> &vec, const size_t highlightGreen = -1, const size_t highlightBlue = -1, const size_t highlightRed = -1, const size_t highlightMagenta = -1, const size_t highlightYellow = -1, const size_t argAnimDelay = 0);
 void printNumberBar(const std::vector<int> &vec);
 void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
 void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
@@ -90,12 +90,12 @@ void initNcurses() {
     halfdelay(1);
     start_color();
 
-    init_pair(HIGHLIGHT_BAR, COLOR_WHITE, COLOR_WHITE);
-    init_pair(HIGHLIGHT_1, HIGHLIGHT_1, HIGHLIGHT_1);
-    init_pair(HIGHLIGHT_2, HIGHLIGHT_2, HIGHLIGHT_2);
-    init_pair(HIGHLIGHT_3, HIGHLIGHT_3, HIGHLIGHT_3);
-    init_pair(HIGHLIGHT_4, HIGHLIGHT_4, HIGHLIGHT_4);
-    init_pair(HIGHLIGHT_5, HIGHLIGHT_5, HIGHLIGHT_5);
+    init_pair(HIGHLIGHT_WHITE, COLOR_WHITE, COLOR_WHITE);
+    init_pair(HIGHLIGHT_GREEN, HIGHLIGHT_GREEN, HIGHLIGHT_GREEN);
+    init_pair(HIGHLIGHT_BLUE, HIGHLIGHT_BLUE, HIGHLIGHT_BLUE);
+    init_pair(HIGHLIGHT_RED, HIGHLIGHT_RED, HIGHLIGHT_RED);
+    init_pair(HIGHLIGHT_MAGENTA, HIGHLIGHT_MAGENTA, HIGHLIGHT_MAGENTA);
+    init_pair(HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW);
 }
 
 bool isValidNumericArgument(const char* argStr) {
@@ -105,7 +105,6 @@ bool isValidNumericArgument(const char* argStr) {
     strtol(argStr, &endptr, 10);
 
     if (endptr == argStr) return false;
-    // if ((errno == ERANGE && (val == LONG_MAX
     while (*endptr != '\0') {
         if (!std::isspace(static_cast<unsigned char>(*endptr))) return false;
         endptr++;
@@ -114,19 +113,19 @@ bool isValidNumericArgument(const char* argStr) {
     return true;
 }
 
-void printChart(const std::vector<int> &vec, const size_t highlight_1, const size_t highlight_2, const size_t highlight_3, const size_t highlight_4, const size_t highlight_5, const size_t argAnimDelay) {
+void printChart(const std::vector<int> &vec, const size_t highlightGreen, const size_t highlightBlue, const size_t highlightRed, const size_t highlightMagenta, const size_t highlightYellow, const size_t argAnimDelay) {
     static size_t animationDelay = argAnimDelay;
     chtype highlightAttr;
     size_t vectorSize = vec.size();
     size_t barHeight, emptyHeight;
     printNumberBar(vec);
     for (size_t i = 0; i <  vectorSize; ++i) {
-        if (highlight_1 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_1);
-        else if (highlight_2 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_2);
-        else if (highlight_3 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_3);
-        else if (highlight_4 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_4);
-        else if (highlight_5 == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_5);
-        else highlightAttr = COLOR_PAIR(HIGHLIGHT_BAR);
+        if (highlightGreen == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_GREEN);
+        else if (highlightBlue == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_BLUE);
+        else if (highlightRed == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_RED);
+        else if (highlightMagenta == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_MAGENTA);
+        else if (highlightYellow == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_YELLOW);
+        else highlightAttr = COLOR_PAIR(HIGHLIGHT_WHITE);
 
         barHeight = vec[i];
         emptyHeight = vectorSize - barHeight;
