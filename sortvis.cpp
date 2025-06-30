@@ -26,6 +26,7 @@ std::vector<int> generateShuffledVector(const size_t size);
 void selectionSort(std::vector<int> &vec);
 void doubleSelectionSort(std::vector<int> &vec);
 void bubbleSort(std::vector<int> &vec);
+void shakerSort(std::vector<int> &vec);
 void insertionSort(std::vector<int> &vec);
 
 int main(int argc, char **argv) {
@@ -60,6 +61,9 @@ int main(int argc, char **argv) {
     std::string argSortType = argv[1];
     if (argSortType == "--bubble" || argSortType == "-b") {
         bubbleSort(vec);
+    }
+    else if (argSortType == "--shaker" || argSortType == "-sh") {
+        shakerSort(vec);
     }
     else if (argSortType == "--selection" || argSortType == "-s") {
         selectionSort(vec);
@@ -187,6 +191,51 @@ void bubbleSort(std::vector<int> &vec) {
             printChart(vec, j, i, j+1);
             printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
         }
+    }
+    printChart(vec);
+    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+}
+
+void shakerSort(std::vector<int> &vec) {
+    std::string sortName = "Shaker sort";
+    size_t comparisonsCounter = 0;
+    size_t swapCounter = 0;
+    size_t arrayAccessCounter = 0;
+    size_t vectorSize = vec.size();
+    bool swapped;
+    size_t left = 0;
+    size_t right = vectorSize - 1;
+    while (left <= right) {
+        swapped = false;
+        for (size_t i = left; i < right; ++i) {
+            printChart(vec, -1, i, i+1, -1, -1);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+            comparisonsCounter++;
+            arrayAccessCounter += 2;
+            if (vec[i] > vec[i+1]) {
+                std::swap(vec[i], vec[i+1]);
+                swapped = true;
+                swapCounter++;
+                arrayAccessCounter += 4;
+            }
+        }
+        right--;
+        if (!swapped) break;
+        swapped = false;
+        for (size_t i = right; i > left; --i) {
+            printChart(vec, -1, i, i-1, -1, -1);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+            comparisonsCounter++;
+            arrayAccessCounter += 2;
+            if (vec[i] < vec[i-1]) {
+                std::swap(vec[i], vec[i-1]);
+                swapped = true;
+                swapCounter++;
+                arrayAccessCounter += 4;
+            }
+        }
+        left++;
+        if (!swapped) break;
     }
     printChart(vec);
     printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
