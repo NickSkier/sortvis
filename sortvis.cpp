@@ -179,18 +179,22 @@ void bubbleSort(std::vector<int> &vec) {
     size_t swapCounter = 0;
     size_t arrayAccessCounter = 0;
     size_t vectorSize = vec.size();
+    bool swapped = false;
     for (size_t i = 0; i < vectorSize-1; ++i) {
+        swapped = false;
         for (size_t j = 0; j < vectorSize-1-i; ++j) {
+            printChart(vec, j, i, j+1);
+            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
             comparisonsCounter++;
             arrayAccessCounter += 2;
             if (vec[j] > vec[j+1]) {
                 std::swap(vec[j], vec[j+1]);
+                swapped = true;
                 swapCounter++;
                 arrayAccessCounter += 4;
             }
-            printChart(vec, j, i, j+1);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
         }
+        if (!swapped) break;
     }
     printChart(vec);
     printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
