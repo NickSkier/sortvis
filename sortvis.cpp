@@ -2,6 +2,7 @@
 #include <cctype>
 #include <cstddef>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 #include <random>
@@ -22,7 +23,7 @@ void printChart(const std::vector<int> &vec, const size_t highlightGreen = -1, c
 void printNumberBar(const std::vector<int> &vec);
 void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
 void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
-std::vector<int> generateShuffledVector(const size_t size);
+std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> seed = std::nullopt);
 void selectionSort(std::vector<int> &vec);
 void doubleSelectionSort(std::vector<int> &vec);
 void bubbleSort(std::vector<int> &vec);
@@ -32,6 +33,7 @@ void insertionSort(std::vector<int> &vec);
 int main(int argc, char **argv) {
     size_t size = 20;
     size_t argAnimationDelay = 0;
+    std::optional<int> seed;
 
     if (argc == 1) {
         std::cout << PROJECT_NAME << ": You must specify at least one argument\n";
@@ -51,8 +53,15 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
+    if (argc >= 5) {
+        if (isValidNumericArgument(argv[4])) seed = std::stoi(argv[4]);
+        else {
+            std::cout << PROJECT_NAME << ": must be a numeric argument -- '" << argv[4] << "'\n";
+            return 1;
+        }
+    }
 
-    std::vector<int> vec = generateShuffledVector(size);
+    std::vector<int> vec = generateShuffledVector(size, seed);
 
     initNcurses();
 
@@ -161,15 +170,18 @@ void printFinalStats(const std::string &sortName, const size_t &comparisonsCount
     std::cout << sortName << " - " << comparisonsCounter << " comparisons, " << swapCounter << " swaps, " << arrayAccessCounter <<  " array accesses" << std::endl;
 }
 
-std::vector<int> generateShuffledVector(const size_t size) {
+std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> seed) {
     std::vector<int> vec(size);
-
     std::iota(vec.begin(), vec.end(), 0);
-
-    std::random_device rd;
-    std::mt19937 engine(rd());
-    std::shuffle(vec.begin(), vec.end(), engine);
-
+    if (seed.has_value()) {
+        std::mt19937 engine(seed.value());
+        std::shuffle(vec.begin(), vec.end(), engine);
+    }
+    else {
+        std::random_device rd;
+        std::mt19937 engine(rd());
+        std::shuffle(vec.begin(), vec.end(), engine);
+    }
     return vec;
 }
 
