@@ -5,12 +5,14 @@ A command-line application that provides a graphical visualization of common sor
 ## Features
 
 * Supported algorithms:
-  * Bubble Sort (`-b`, `--bubble`)
-  * Selection Sort (`-s`, `--selection`)
-  * Double Selection Sort (`-ds`, `--double-selection`)
-  * Insertion Sort (`-i`, `--insertion`)
+  * Bubble Sort (`bubble`)
+  * Shaker Sort (`shaker`)
+  * Selection Sort (`selection`)
+  * Double Selection Sort (`double-selection`)
+  * Insertion Sort (`insertion`)
 * Dynamic chart size based on input argument.
 * Adjustable animation speed (delay between steps).
+* Abbility to set specific shuffle seed.
 * Real-time display of statistics: comparisons, swaps, and array accesses.
 * Highlights elements currently being examined or moved during the sort.
 
@@ -18,8 +20,8 @@ A command-line application that provides a graphical visualization of common sor
 
 To build and run this project, you need:
 
-* A C++ compiler (supporting C++11 or later).
-* The ncurses development library installed on your system.
+* A C++ compiler (supporting C++17 or later).
+* The ncurses and CLI11 development libraries installed on your system.
 
 Download `sortvis.cpp`.
 
@@ -38,13 +40,15 @@ g++ sortvis.cpp -o sortvis -lncurses
 Run the compiled executable from your terminal. The program requires at least one argument to specify the sorting algorithm.
 
 ```bash
-./sortvis <algorithm> [size] [animation_delay]
+./sortvis <algorithm> --size [size] --delay [animation_delay] --seed [shuffle_seed]
 ```
 
 * [algorithm]: Required. Specifies the sorting algorithm to visualize. Choose one of the following flags:
-  * `-b`or `--bubble`
-  * `-s`or `--selection`
-  * `-ds`or `--double-selection`
-  * `-i`or `--insertion`
+  * `bubble`
+  * `shaker`
+  * `selection`
+  * `double-selection`
+  * `insertion`
 * [size]: Optional. The number of elements in the array to sort. Must be a positive integer. Defaults to 20 if not specified.
 * [animation_delay]: Optional. The delay in milliseconds between visualization steps, controls visualization speed. Must be a non-negative integer. Defaults to 0 (no delay) if not specified.
+* [seed]: Optional. The seed, controls shuffle randomazer seed.
