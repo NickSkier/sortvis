@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -19,17 +20,91 @@
 #define HIGHLIGHT_MAGENTA 5    // Magenta
 #define HIGHLIGHT_YELLOW 11    // Yellow
 
-void initNcurses();
-void printChart(const std::vector<int> &vec, const size_t highlightGreen = -1, const size_t highlightBlue = -1, const size_t highlightRed = -1, const size_t highlightMagenta = -1, const size_t highlightYellow = -1, const size_t animDelay = 0);
-void printNumberBar(const std::vector<int> &vec);
-void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
-void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
+class ProgressReporter {
+private:
+    std::string sortName;
+    size_t comparisons = 0;
+    size_t accesses = 0;
+    size_t swaps = 0;
+    bool noVis;
+    size_t animationDelay;
+    size_t vectorSize = 0;
+
+    void printNumberBar(const std::vector<int> &vec) {
+        size_t vectorSize = vec.size();
+        attron(A_BOLD);
+        for (size_t i = 0; i < vectorSize; ++i) {
+            mvprintw(i+1, vectorSize*2+1, "%-*ld", 3, vectorSize-1-i);
+        }
+        attroff(A_BOLD);
+    }
+public:
+    ProgressReporter(bool noVis = false, size_t delay = 20) : noVis(noVis), animationDelay(delay) {
+        if (!this->noVis) {
+            initscr();
+            keypad(stdscr, TRUE);
+            noecho();
+            curs_set(0);
+            cbreak();
+            halfdelay(1);
+            start_color();
+
+            init_pair(HIGHLIGHT_WHITE, COLOR_WHITE, COLOR_WHITE);
+            init_pair(HIGHLIGHT_GREEN, HIGHLIGHT_GREEN, HIGHLIGHT_GREEN);
+            init_pair(HIGHLIGHT_BLUE, HIGHLIGHT_BLUE, HIGHLIGHT_BLUE);
+            init_pair(HIGHLIGHT_RED, HIGHLIGHT_RED, HIGHLIGHT_RED);
+            init_pair(HIGHLIGHT_MAGENTA, HIGHLIGHT_MAGENTA, HIGHLIGHT_MAGENTA);
+            init_pair(HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW);
+        }
+    }
+    ~ProgressReporter() {
+        if (!this->noVis) endwin();
+        std::cout << sortName << " sort - " << comparisons << " comparisons, " << swaps << " swaps, " << accesses <<  " array accesses" << std::endl;
+    }
+
+    void setSortName(std::string name = "[Unnamed]") {
+        name[0] = toupper(name[0]);
+        sortName = name;
+    }
+    void addComparison(size_t count = 1) { comparisons += count; }
+    void addArrayAccess(size_t count = 1) { accesses += count; }
+    void addSwap(size_t count = 1) { swaps += count; }
+
+    void printProgress(const std::vector<int> &vec, const std::optional<size_t> green = std::nullopt, const std::optional<size_t> blue = std::nullopt, const std::optional<size_t> red = std::nullopt, const std::optional<size_t> magenta = std::nullopt, const std::optional<size_t> yellow = std::nullopt) {
+        if (!this->noVis) {
+            mvprintw(0, 0, "%s sort - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisons, swaps, accesses);
+            printNumberBar(vec);
+            if (vectorSize == 0) vectorSize = vec.size();
+            chtype highlightAttr;
+            size_t barHeight, emptyHeight;
+            for (size_t i = 0; i <  vectorSize; ++i) {
+                if (green == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_GREEN);
+                else if (blue == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_BLUE);
+                else if (red == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_RED);
+                else if (magenta == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_MAGENTA);
+                else if (yellow == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_YELLOW);
+                else highlightAttr = COLOR_PAIR(HIGHLIGHT_WHITE);
+
+                barHeight = vec[i];
+                emptyHeight = vectorSize - barHeight;
+
+                attrset(highlightAttr);
+                for (size_t j = emptyHeight; j <= vectorSize; ++j) mvprintw(j, i*2, "[]");
+                attrset(A_NORMAL);
+                for (size_t j = 0; j < emptyHeight-1; ++j) mvprintw(j+1, i*2, "  ");
+            }
+            refresh();
+            napms(animationDelay);
+        }
+    }
+};
+
 std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> seed = std::nullopt);
-void selectionSort(std::vector<int> &vec);
-void doubleSelectionSort(std::vector<int> &vec);
-void bubbleSort(std::vector<int> &vec);
-void shakerSort(std::vector<int> &vec);
-void insertionSort(std::vector<int> &vec);
+void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter);
+void shakerSort(std::vector<int> &vec, ProgressReporter& reporter);
+void selectionSort(std::vector<int> &vec, ProgressReporter& reporter);
+void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter);
+void insertionSort(std::vector<int> &vec, ProgressReporter& reporter);
 
 int main(int argc, char **argv) {
     CLI::App app{"SortVis: A command-line sorting algorithm visualizer."};
@@ -39,8 +114,9 @@ int main(int argc, char **argv) {
     size_t size = 20;
     size_t animationDelay = 0;
     std::optional<int> seed;
+    bool visualizationDisabled = false;
 
-    std::map<std::string, std::function<void(std::vector<int>&)>> sortFunctions;
+    std::map<std::string, std::function<void(std::vector<int>&, ProgressReporter&)>> sortFunctions;
     sortFunctions["bubble"] = bubbleSort;
     sortFunctions["shaker"] = shakerSort;
     sortFunctions["selection"] = selectionSort;
@@ -56,6 +132,8 @@ int main(int argc, char **argv) {
     app.add_option("-d,--delay", animationDelay, "Animation delay in millisecons. Controls the animation speed")->default_val(0);
     app.add_option("--seed", seed, "[Optional] An integer seed for the elements array random shuffle");
 
+    app.add_flag("--no-vis", visualizationDisabled, "Disable ncurses visualization")->default_val(false);
+
     try {
         app.parse(argc, argv);
     }
@@ -65,81 +143,19 @@ int main(int argc, char **argv) {
 
     std::vector<int> vec = generateShuffledVector(size, seed);
 
-    initNcurses();
-
-    printChart(vec, -1, -1, -1, -1, -1, animationDelay);
+    ProgressReporter reporter(visualizationDisabled, animationDelay);
 
     CLI::App* selectedSortSubcommand = app.get_subcommands().front();
-    auto sortFunction = sortFunctions.find(selectedSortSubcommand->get_name());
+    std::string sortName = selectedSortSubcommand->get_name();
+    reporter.setSortName(sortName);
+    auto sortFunction = sortFunctions.find(sortName);
+    // auto sortFunction = sortFunctions.find(selectedSortSubcommand->get_name());
 
     if (sortFunction != sortFunctions.end()) {
-        sortFunction->second(vec);
+        sortFunction->second(vec, reporter);
     }
     
-    endwin();
-
     return 0;
-}
-
-void initNcurses() {
-    initscr();
-    keypad(stdscr, TRUE);
-    noecho();
-    curs_set(0);
-    cbreak();
-    halfdelay(1);
-    start_color();
-
-    init_pair(HIGHLIGHT_WHITE, COLOR_WHITE, COLOR_WHITE);
-    init_pair(HIGHLIGHT_GREEN, HIGHLIGHT_GREEN, HIGHLIGHT_GREEN);
-    init_pair(HIGHLIGHT_BLUE, HIGHLIGHT_BLUE, HIGHLIGHT_BLUE);
-    init_pair(HIGHLIGHT_RED, HIGHLIGHT_RED, HIGHLIGHT_RED);
-    init_pair(HIGHLIGHT_MAGENTA, HIGHLIGHT_MAGENTA, HIGHLIGHT_MAGENTA);
-    init_pair(HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW);
-}
-
-void printChart(const std::vector<int> &vec, const size_t highlightGreen, const size_t highlightBlue, const size_t highlightRed, const size_t highlightMagenta, const size_t highlightYellow, const size_t animDelay) {
-    static size_t animationDelay = animDelay;
-    chtype highlightAttr;
-    size_t vectorSize = vec.size();
-    size_t barHeight, emptyHeight;
-    printNumberBar(vec);
-    for (size_t i = 0; i <  vectorSize; ++i) {
-        if (highlightGreen == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_GREEN);
-        else if (highlightBlue == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_BLUE);
-        else if (highlightRed == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_RED);
-        else if (highlightMagenta == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_MAGENTA);
-        else if (highlightYellow == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_YELLOW);
-        else highlightAttr = COLOR_PAIR(HIGHLIGHT_WHITE);
-
-        barHeight = vec[i];
-        emptyHeight = vectorSize - barHeight;
-
-        attrset(highlightAttr);
-        for (size_t j = emptyHeight; j <= vectorSize; ++j) mvprintw(j, i*2, "[]");
-        attrset(A_NORMAL);
-        for (size_t j = 0; j < emptyHeight-1; ++j) mvprintw(j+1, i*2, "  ");
-    }
-    refresh();
-    napms(animationDelay);
-}
-
-void printNumberBar(const std::vector<int> &vec) {
-    size_t vectorSize = vec.size();
-    attron(A_BOLD);
-    for (size_t i = 0; i < vectorSize; ++i) {
-        mvprintw(i+1, vectorSize*2+1, "%-*ld", 3, vectorSize-1-i);
-    }
-    attroff(A_BOLD);
-}
-
-void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter) {
-    mvprintw(0, 0, "%s - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisonsCounter, swapCounter, arrayAccessCounter);
-}
-
-void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter) {
-    endwin();
-    std::cout << sortName << " - " << comparisonsCounter << " comparisons, " << swapCounter << " swaps, " << arrayAccessCounter <<  " array accesses" << std::endl;
 }
 
 std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> seed) {
@@ -157,38 +173,30 @@ std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> s
     return vec;
 }
 
-void bubbleSort(std::vector<int> &vec) {
-    std::string sortName = "Bubble sort";
-    size_t comparisonsCounter = 0;
-    size_t swapCounter = 0;
-    size_t arrayAccessCounter = 0;
+void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter) {
+    // reporter.setSortName("Bubble sort");
     size_t vectorSize = vec.size();
     bool swapped = false;
     for (size_t i = 0; i < vectorSize-1; ++i) {
         swapped = false;
         for (size_t j = 0; j < vectorSize-1-i; ++j) {
-            printChart(vec, j, i, j+1);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-            comparisonsCounter++;
-            arrayAccessCounter += 2;
+            reporter.printProgress(vec, j, i, j+1);
+            reporter.addComparison();
+            reporter.addArrayAccess(2);
             if (vec[j] > vec[j+1]) {
                 std::swap(vec[j], vec[j+1]);
                 swapped = true;
-                swapCounter++;
-                arrayAccessCounter += 4;
+                reporter.addSwap();
+                reporter.addArrayAccess(4);
             }
         }
         if (!swapped) break;
     }
-    printChart(vec);
-    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+    reporter.printProgress(vec);
 }
 
-void shakerSort(std::vector<int> &vec) {
-    std::string sortName = "Shaker sort";
-    size_t comparisonsCounter = 0;
-    size_t swapCounter = 0;
-    size_t arrayAccessCounter = 0;
+void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
+    // reporter.setSortName("Shaker sort");
     size_t vectorSize = vec.size();
     bool swapped;
     size_t left = 0;
@@ -196,85 +204,72 @@ void shakerSort(std::vector<int> &vec) {
     while (left <= right) {
         swapped = false;
         for (size_t i = left; i < right; ++i) {
-            printChart(vec, -1, i, i+1, -1, -1);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-            comparisonsCounter++;
-            arrayAccessCounter += 2;
+            reporter.printProgress(vec, -1, i, i+1, -1, -1);
+            reporter.addComparison();
+            reporter.addArrayAccess(2);
             if (vec[i] > vec[i+1]) {
                 std::swap(vec[i], vec[i+1]);
                 swapped = true;
-                swapCounter++;
-                arrayAccessCounter += 4;
+                reporter.addSwap();
+                reporter.addArrayAccess(4);
             }
         }
         right--;
         if (!swapped) break;
         swapped = false;
         for (size_t i = right; i > left; --i) {
-            printChart(vec, -1, i, i-1, -1, -1);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-            comparisonsCounter++;
-            arrayAccessCounter += 2;
+            reporter.printProgress(vec, -1, i, i-1, -1, -1);
+            reporter.addComparison();
+            reporter.addArrayAccess(2);
             if (vec[i] < vec[i-1]) {
                 std::swap(vec[i], vec[i-1]);
                 swapped = true;
-                swapCounter++;
-                arrayAccessCounter += 4;
+                reporter.addSwap();
+                reporter.addArrayAccess(4);
             }
         }
         left++;
         if (!swapped) break;
     }
-    printChart(vec);
-    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+    reporter.printProgress(vec);
 }
 
-void selectionSort(std::vector<int> &vec) {
-    std::string sortName = "Selection sort";
-    size_t comparisonsCounter = 0;
-    size_t swapCounter = 0;
-    size_t arrayAccessCounter = 0;
+void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
+    // reporter.setSortName("Selection sort");
     size_t vectorSize = vec.size();
     size_t minIndex;
     size_t lastSwapedIndex = vectorSize;
     for (size_t i = 0; i < vectorSize-1; ++i) {
         minIndex = i;
         for (size_t j = i + 1; j < vectorSize; ++j) {
-            printChart(vec, lastSwapedIndex, minIndex, j);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-            comparisonsCounter++;
-            arrayAccessCounter += 2;
+            reporter.printProgress(vec, lastSwapedIndex, minIndex, j);
+            reporter.addComparison();
+            reporter.addArrayAccess(2);
             if (vec[j] < vec[minIndex]) minIndex = j;
         }
         if (i != minIndex) {
             std::swap(vec[i], vec[minIndex]);
             lastSwapedIndex = i;
-            swapCounter++;
-            arrayAccessCounter += 4;
+            reporter.addSwap();
+            reporter.addArrayAccess(4);
         }
     }
-    printChart(vec);
-    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+    reporter.printProgress(vec);
 }
 
-void doubleSelectionSort(std::vector<int> &vec) {
-    std::string sortName = "Double selection sort";
-    size_t comparisonsCounter = 0;
-    size_t swapCounter = 0;
-    size_t arrayAccessCounter = 0;
+void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
+    // reporter.setSortName("Double selection sort");
     size_t vectorSize = vec.size();
     size_t minIndex, maxIndex;
     size_t lastSwapedMinIndex = vectorSize;
     size_t lastSwapedMaxIndex = vectorSize;
-    std::string wasSwapedStr = "false";
     for (size_t i = 0; i < vectorSize/2+1; ++i) {
         minIndex = i;
         maxIndex = i;
         for (size_t j = i; j < vectorSize - i; ++j) {
-            printChart(vec, lastSwapedMinIndex, minIndex, j, maxIndex, lastSwapedMaxIndex);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
-            comparisonsCounter += 2;
-            arrayAccessCounter += 4;
+            reporter.printProgress(vec, lastSwapedMinIndex, minIndex, j, maxIndex, lastSwapedMaxIndex);
+            reporter.addComparison(2);
+            reporter.addArrayAccess(4);
             if (vec[j] < vec[minIndex]) minIndex = j;
             if (vec[j] > vec[maxIndex]) maxIndex = j;
         }
@@ -282,48 +277,42 @@ void doubleSelectionSort(std::vector<int> &vec) {
             if (i == maxIndex) maxIndex = minIndex;
             std::swap(vec[i], vec[minIndex]);
             lastSwapedMinIndex = i;
-            swapCounter++;
-            arrayAccessCounter += 4;
+            reporter.addSwap();
+            reporter.addArrayAccess(4);
         }
         if (vectorSize - i != maxIndex) {
             std::swap(vec[vectorSize-i-1], vec[maxIndex]);
             lastSwapedMaxIndex = vectorSize-i-1;
-            swapCounter++;
-            arrayAccessCounter += 4;
+            reporter.addSwap();
+            reporter.addArrayAccess(4);
         }
     }
-    printChart(vec);
-    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+    reporter.printProgress(vec);
 }
 
-void insertionSort(std::vector<int> &vec) {
-    std::string sortName = "Insertion sort";
-    size_t comparisonsCounter = 0;
-    size_t swapCounter = 0;
-    size_t arrayAccessCounter = 0;
+void insertionSort(std::vector<int> &vec, ProgressReporter& reporter) {
+    // reporter.setSortName("Insertion sort");
     size_t vectorSize = vec.size();
     int key, j;
     for (size_t i = 1; i < vectorSize; ++i) {
         key = vec[i];
-        arrayAccessCounter++;
+        reporter.addArrayAccess();
         j = i - 1;
         while (j >= 0 && vec[j] > key) {
-            comparisonsCounter++;
-            arrayAccessCounter++;
+            reporter.addComparison();
+            reporter.addArrayAccess();
             vec[j+1] = vec[j];
-            arrayAccessCounter += 2;
-            vec[j] = key; // arrayAccessCounter shouldn't be incremented as this is only used for visualization
-            printChart(vec, j, i, j+1);
-            printStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+            reporter.addArrayAccess(2);
+            vec[j] = key; // reporter.addArrayAccess() shouldn't be incremented as this is only used for visualization
+            reporter.printProgress(vec, j, i, j+1);
             j--;
         }
         if (j >= 0) {
-            comparisonsCounter++;
-            arrayAccessCounter++;
+            reporter.addComparison();
+            reporter.addArrayAccess();
         }
         vec[j+1] = key;
-        arrayAccessCounter++;
+        reporter.addArrayAccess();
     }
-    printChart(vec);
-    printFinalStats(sortName, comparisonsCounter, arrayAccessCounter, swapCounter);
+    reporter.printProgress(vec);
 }
