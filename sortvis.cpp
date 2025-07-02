@@ -1,12 +1,14 @@
 #include <algorithm>
-#include <cctype>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
 #include <random>
 #include <numeric>
+#include <map>
+#include <CLI/CLI.hpp>
 #include <ncurses.h>
 
 #define PROJECT_NAME "sortvis"
@@ -18,8 +20,7 @@
 #define HIGHLIGHT_YELLOW 11    // Yellow
 
 void initNcurses();
-bool isValidNumericArgument(const char* argStr);
-void printChart(const std::vector<int> &vec, const size_t highlightGreen = -1, const size_t highlightBlue = -1, const size_t highlightRed = -1, const size_t highlightMagenta = -1, const size_t highlightYellow = -1, const size_t argAnimDelay = 0);
+void printChart(const std::vector<int> &vec, const size_t highlightGreen = -1, const size_t highlightBlue = -1, const size_t highlightRed = -1, const size_t highlightMagenta = -1, const size_t highlightYellow = -1, const size_t animDelay = 0);
 void printNumberBar(const std::vector<int> &vec);
 void printStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
 void printFinalStats(const std::string &sortName, const size_t &comparisonsCounter, const size_t arrayAccessCounter, const size_t swapCounter);
@@ -31,64 +32,50 @@ void shakerSort(std::vector<int> &vec);
 void insertionSort(std::vector<int> &vec);
 
 int main(int argc, char **argv) {
+    CLI::App app{"SortVis: A command-line sorting algorithm visualizer."};
+    app.footer("Example: " + std::string(PROJECT_NAME) + " bubble --size 50 --delay 10");
+    app.fallthrough();
+
     size_t size = 20;
-    size_t argAnimationDelay = 0;
+    size_t animationDelay = 0;
     std::optional<int> seed;
 
-    if (argc == 1) {
-        std::cout << PROJECT_NAME << ": You must specify at least one argument\n";
-        return 1;
+    std::map<std::string, std::function<void(std::vector<int>&)>> sortFunctions;
+    sortFunctions["bubble"] = bubbleSort;
+    sortFunctions["shaker"] = shakerSort;
+    sortFunctions["selection"] = selectionSort;
+    sortFunctions["double-selection"] = doubleSelectionSort;
+    sortFunctions["insertion"] = insertionSort;
+
+    app.require_subcommand(1);
+    for (auto const& [name, func] : sortFunctions) {
+        app.add_subcommand(name, "Use the " + name + " sort algorithm.");
     }
-    if (argc >= 3) {
-        if (isValidNumericArgument(argv[2])) size = std::stoi(argv[2]);
-        else {
-            std::cout << PROJECT_NAME << ": must be a numeric argument -- '" << argv[2] << "'\n";
-            return 1;
-        }
+
+    app.add_option("-s,--size", size, "The number of elements to sort")->default_val(20);
+    app.add_option("-d,--delay", animationDelay, "Animation delay in millisecons. Controls the animation speed")->default_val(0);
+    app.add_option("--seed", seed, "[Optional] An integer seed for the elements array random shuffle");
+
+    try {
+        app.parse(argc, argv);
     }
-    if (argc >= 4) {
-        if (isValidNumericArgument(argv[3])) argAnimationDelay = std::stoi(argv[3]);
-        else {
-            std::cout << PROJECT_NAME << ": must be a numeric argument -- '" << argv[3] << "'\n";
-            return 1;
-        }
-    }
-    if (argc >= 5) {
-        if (isValidNumericArgument(argv[4])) seed = std::stoi(argv[4]);
-        else {
-            std::cout << PROJECT_NAME << ": must be a numeric argument -- '" << argv[4] << "'\n";
-            return 1;
-        }
+    catch (const CLI::ParseError &e) {
+        return app.exit(e);
     }
 
     std::vector<int> vec = generateShuffledVector(size, seed);
 
     initNcurses();
 
-    printChart(vec, -1, -1, -1, -1, -1, argAnimationDelay);
+    printChart(vec, -1, -1, -1, -1, -1, animationDelay);
 
-    std::string argSortType = argv[1];
-    if (argSortType == "--bubble" || argSortType == "-b") {
-        bubbleSort(vec);
-    }
-    else if (argSortType == "--shaker" || argSortType == "-sh") {
-        shakerSort(vec);
-    }
-    else if (argSortType == "--selection" || argSortType == "-s") {
-        selectionSort(vec);
-    }
-    else if (argSortType == "--double-selection" || argSortType == "-ds") {
-        doubleSelectionSort(vec);
-    }
-    else if (argSortType == "--insertion" || argSortType == "-i") {
-        insertionSort(vec);
-    }
-    else {
-        endwin();
-        std::cout << PROJECT_NAME << ": invalid option '" << argv[1] << "'\n";
-        return 1;
-    }
+    CLI::App* selectedSortSubcommand = app.get_subcommands().front();
+    auto sortFunction = sortFunctions.find(selectedSortSubcommand->get_name());
 
+    if (sortFunction != sortFunctions.end()) {
+        sortFunction->second(vec);
+    }
+    
     endwin();
 
     return 0;
@@ -111,23 +98,8 @@ void initNcurses() {
     init_pair(HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW, HIGHLIGHT_YELLOW);
 }
 
-bool isValidNumericArgument(const char* argStr) {
-    if (argStr == nullptr || *argStr == '\0') return false;
-
-    char* endptr;
-    strtol(argStr, &endptr, 10);
-
-    if (endptr == argStr) return false;
-    while (*endptr != '\0') {
-        if (!std::isspace(static_cast<unsigned char>(*endptr))) return false;
-        endptr++;
-    }
-    
-    return true;
-}
-
-void printChart(const std::vector<int> &vec, const size_t highlightGreen, const size_t highlightBlue, const size_t highlightRed, const size_t highlightMagenta, const size_t highlightYellow, const size_t argAnimDelay) {
-    static size_t animationDelay = argAnimDelay;
+void printChart(const std::vector<int> &vec, const size_t highlightGreen, const size_t highlightBlue, const size_t highlightRed, const size_t highlightMagenta, const size_t highlightYellow, const size_t animDelay) {
+    static size_t animationDelay = animDelay;
     chtype highlightAttr;
     size_t vectorSize = vec.size();
     size_t barHeight, emptyHeight;
