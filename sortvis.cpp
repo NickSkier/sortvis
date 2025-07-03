@@ -30,8 +30,7 @@ private:
     size_t animationDelay;
     size_t vectorSize = 0;
 
-    void printNumberBar(const std::vector<int> &vec) {
-        size_t vectorSize = vec.size();
+    void printNumberBar() {
         attron(A_BOLD);
         for (size_t i = 0; i < vectorSize; ++i) {
             mvprintw(i+1, vectorSize*2+1, "%-*ld", 3, vectorSize-1-i);
@@ -72,9 +71,9 @@ public:
 
     void printProgress(const std::vector<int> &vec, const std::optional<size_t> green = std::nullopt, const std::optional<size_t> blue = std::nullopt, const std::optional<size_t> red = std::nullopt, const std::optional<size_t> magenta = std::nullopt, const std::optional<size_t> yellow = std::nullopt) {
         if (!this->noVis) {
-            mvprintw(0, 0, "%s sort - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisons, swaps, accesses);
-            printNumberBar(vec);
             if (vectorSize == 0) vectorSize = vec.size();
+            mvprintw(0, 0, "%s sort - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisons, swaps, accesses);
+            printNumberBar();
             chtype highlightAttr;
             size_t barHeight, emptyHeight;
             for (size_t i = 0; i <  vectorSize; ++i) {
