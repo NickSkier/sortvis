@@ -99,7 +99,7 @@ public:
     }
 };
 
-std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> seed = std::nullopt);
+std::vector<int> generateShuffledVector(size_t size, std::optional<int> seed = std::nullopt);
 void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter);
 void shakerSort(std::vector<int> &vec, ProgressReporter& reporter);
 void selectionSort(std::vector<int> &vec, ProgressReporter& reporter);
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> seed) {
+std::vector<int> generateShuffledVector(size_t size, std::optional<int> seed) {
     std::vector<int> vec(size);
     std::iota(vec.begin(), vec.end(), 0);
     if (seed.has_value()) {
@@ -174,7 +174,6 @@ std::vector<int> generateShuffledVector(const size_t &size, std::optional<int> s
 }
 
 void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter) {
-    // reporter.setSortName("Bubble sort");
     size_t vectorSize = vec.size();
     bool swapped = false;
     for (size_t i = 0; i < vectorSize-1; ++i) {
@@ -196,7 +195,6 @@ void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter) {
 }
 
 void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
-    // reporter.setSortName("Shaker sort");
     size_t vectorSize = vec.size();
     bool swapped;
     size_t left = 0;
@@ -235,7 +233,6 @@ void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
 }
 
 void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
-    // reporter.setSortName("Selection sort");
     size_t vectorSize = vec.size();
     size_t minIndex;
     size_t lastSwapedIndex = vectorSize;
@@ -258,7 +255,6 @@ void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
 }
 
 void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
-    // reporter.setSortName("Double selection sort");
     size_t vectorSize = vec.size();
     size_t minIndex, maxIndex;
     size_t lastSwapedMinIndex = vectorSize;
@@ -291,7 +287,6 @@ void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
 }
 
 void insertionSort(std::vector<int> &vec, ProgressReporter& reporter) {
-    // reporter.setSortName("Insertion sort");
     size_t vectorSize = vec.size();
     int key, j;
     for (size_t i = 1; i < vectorSize; ++i) {
