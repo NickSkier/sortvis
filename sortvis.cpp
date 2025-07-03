@@ -148,7 +148,6 @@ int main(int argc, char **argv) {
     std::string sortName = selectedSortSubcommand->get_name();
     reporter.setSortName(sortName);
     auto sortFunction = sortFunctions.find(sortName);
-    // auto sortFunction = sortFunctions.find(selectedSortSubcommand->get_name());
 
     if (sortFunction != sortFunctions.end()) {
         sortFunction->second(vec, reporter);
