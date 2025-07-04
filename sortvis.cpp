@@ -43,7 +43,6 @@ public:
         if (!this->noVis) {
             initscr();
             timeout(0);
-            keypad(stdscr, TRUE);
             noecho();
             curs_set(0);
             cbreak();
