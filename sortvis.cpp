@@ -42,11 +42,11 @@ public:
     ProgressReporter(bool noVis = false, size_t delay = 20) : noVis(noVis), animationDelay(delay) {
         if (!this->noVis) {
             initscr();
+            timeout(0);
             keypad(stdscr, TRUE);
             noecho();
             curs_set(0);
             cbreak();
-            halfdelay(1);
             start_color();
 
             init_pair(HIGHLIGHT_WHITE, COLOR_WHITE, COLOR_WHITE);
