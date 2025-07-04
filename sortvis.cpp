@@ -27,6 +27,7 @@ private:
     size_t accesses = 0;
     size_t swaps = 0;
     bool noVis;
+    bool isCancelled = false;
     size_t animationDelay;
     size_t vectorSize = 0;
 
@@ -58,6 +59,7 @@ public:
     }
     ~ProgressReporter() {
         if (!this->noVis) endwin();
+        if (isCancelled) std::cout << "\033[1;33mSort canceled by user.\033[0m" << std::endl;
         std::cout << sortName << " sort - " << comparisons << " comparisons, " << swaps << " swaps, " << accesses <<  " array accesses" << std::endl;
     }
 
@@ -68,9 +70,14 @@ public:
     void addComparison(size_t count = 1) { comparisons += count; }
     void addArrayAccess(size_t count = 1) { accesses += count; }
     void addSwap(size_t count = 1) { swaps += count; }
+    bool shouldContinue() const { return !isCancelled; }
 
     void printProgress(const std::vector<int> &vec, const std::optional<size_t> green = std::nullopt, const std::optional<size_t> blue = std::nullopt, const std::optional<size_t> red = std::nullopt, const std::optional<size_t> magenta = std::nullopt, const std::optional<size_t> yellow = std::nullopt) {
         if (!this->noVis) {
+            if (getch() == 'q') {
+                isCancelled = true;
+                return;
+            }
             if (vectorSize == 0) vectorSize = vec.size();
             mvprintw(0, 0, "%s sort - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisons, swaps, accesses);
             printNumberBar();
@@ -107,7 +114,7 @@ void insertionSort(std::vector<int> &vec, ProgressReporter& reporter);
 
 int main(int argc, char **argv) {
     CLI::App app{"SortVis: A command-line sorting algorithm visualizer."};
-    app.footer("Example: " + std::string(PROJECT_NAME) + " bubble --size 50 --delay 10");
+    app.footer("Example: " + std::string(PROJECT_NAME) + " bubble --size 50 --delay 10\nTo interupt sort and exit press 'q'");
     app.fallthrough();
 
     size_t size = 20;
@@ -179,6 +186,7 @@ void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter) {
         swapped = false;
         for (size_t j = 0; j < vectorSize-1-i; ++j) {
             reporter.printProgress(vec, j, i, j+1);
+            if (!reporter.shouldContinue()) return;
             reporter.addComparison();
             reporter.addArrayAccess(2);
             if (vec[j] > vec[j+1]) {
@@ -190,7 +198,7 @@ void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter) {
         }
         if (!swapped) break;
     }
-    reporter.printProgress(vec);
+    if (reporter.shouldContinue()) reporter.printProgress(vec);
 }
 
 void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
@@ -202,6 +210,7 @@ void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
         swapped = false;
         for (size_t i = left; i < right; ++i) {
             reporter.printProgress(vec, -1, i, i+1, -1, -1);
+            if (!reporter.shouldContinue()) return;
             reporter.addComparison();
             reporter.addArrayAccess(2);
             if (vec[i] > vec[i+1]) {
@@ -216,6 +225,7 @@ void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
         swapped = false;
         for (size_t i = right; i > left; --i) {
             reporter.printProgress(vec, -1, i, i-1, -1, -1);
+            if (!reporter.shouldContinue()) return;
             reporter.addComparison();
             reporter.addArrayAccess(2);
             if (vec[i] < vec[i-1]) {
@@ -228,7 +238,7 @@ void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
         left++;
         if (!swapped) break;
     }
-    reporter.printProgress(vec);
+    if (reporter.shouldContinue()) reporter.printProgress(vec);
 }
 
 void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
@@ -239,6 +249,7 @@ void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
         minIndex = i;
         for (size_t j = i + 1; j < vectorSize; ++j) {
             reporter.printProgress(vec, lastSwapedIndex, minIndex, j);
+            if (!reporter.shouldContinue()) return;
             reporter.addComparison();
             reporter.addArrayAccess(2);
             if (vec[j] < vec[minIndex]) minIndex = j;
@@ -250,7 +261,7 @@ void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
             reporter.addArrayAccess(4);
         }
     }
-    reporter.printProgress(vec);
+    if (reporter.shouldContinue()) reporter.printProgress(vec);
 }
 
 void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
@@ -263,6 +274,7 @@ void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
         maxIndex = i;
         for (size_t j = i; j < vectorSize - i; ++j) {
             reporter.printProgress(vec, lastSwapedMinIndex, minIndex, j, maxIndex, lastSwapedMaxIndex);
+            if (!reporter.shouldContinue()) return;
             reporter.addComparison(2);
             reporter.addArrayAccess(4);
             if (vec[j] < vec[minIndex]) minIndex = j;
@@ -282,7 +294,7 @@ void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
             reporter.addArrayAccess(4);
         }
     }
-    reporter.printProgress(vec);
+    if (reporter.shouldContinue()) reporter.printProgress(vec);
 }
 
 void insertionSort(std::vector<int> &vec, ProgressReporter& reporter) {
@@ -299,6 +311,7 @@ void insertionSort(std::vector<int> &vec, ProgressReporter& reporter) {
             reporter.addArrayAccess(2);
             vec[j] = key; // reporter.addArrayAccess() shouldn't be incremented as this is only used for visualization
             reporter.printProgress(vec, j, i, j+1);
+            if (!reporter.shouldContinue()) return;
             j--;
         }
         if (j >= 0) {
@@ -308,5 +321,5 @@ void insertionSort(std::vector<int> &vec, ProgressReporter& reporter) {
         vec[j+1] = key;
         reporter.addArrayAccess();
     }
-    reporter.printProgress(vec);
+    if (reporter.shouldContinue()) reporter.printProgress(vec);
 }
