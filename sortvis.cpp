@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     signal(SIGINT, signalHandler);
 
     CLI::App app{"SortVis: A command-line sorting algorithm visualizer."};
-    app.footer("Example: " + std::string(PROJECT_NAME) + " bubble --size 50 --delay 10\nTo interupt sort and exit press 'q'");
+    app.footer("Example: " + std::string(PROJECT_NAME) + " bubble --size 50 --delay 10\nTo interupt sort and exit press 'q' or 'Ctrl-c' for non visual mode");
     app.fallthrough();
 
     size_t size = 20;
