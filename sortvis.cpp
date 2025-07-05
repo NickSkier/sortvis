@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cctype>
+#include <csignal>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -19,6 +20,12 @@
 #define HIGHLIGHT_RED 1        // Red
 #define HIGHLIGHT_MAGENTA 5    // Magenta
 #define HIGHLIGHT_YELLOW 11    // Yellow
+
+volatile sig_atomic_t g_interruptSignaled = 0;
+
+void signalHandler([[maybe_unused]] int signal) {
+    g_interruptSignaled = 1;
+}
 
 class ProgressReporter {
 private:
@@ -58,7 +65,7 @@ public:
     }
     ~ProgressReporter() {
         if (!this->noVis) endwin();
-        if (isCancelled) std::cout << "\033[1;33mSort canceled by user.\033[0m" << std::endl;
+        if (isCancelled || g_interruptSignaled) std::cout << "\033[1;33mSort canceled by user.\033[0m" << std::endl;
         std::cout << sortName << " sort - " << comparisons << " comparisons, " << swaps << " swaps, " << accesses <<  " array accesses" << std::endl;
     }
 
@@ -72,6 +79,10 @@ public:
     bool shouldContinue() const { return !isCancelled; }
 
     void printProgress(const std::vector<int> &vec, const std::optional<size_t> green = std::nullopt, const std::optional<size_t> blue = std::nullopt, const std::optional<size_t> red = std::nullopt, const std::optional<size_t> magenta = std::nullopt, const std::optional<size_t> yellow = std::nullopt) {
+        if (g_interruptSignaled) {
+            isCancelled = true;
+            return;
+        }
         if (!this->noVis) {
             if (getch() == 'q') {
                 isCancelled = true;
@@ -112,6 +123,8 @@ void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter);
 void insertionSort(std::vector<int> &vec, ProgressReporter& reporter);
 
 int main(int argc, char **argv) {
+    signal(SIGINT, signalHandler);
+
     CLI::App app{"SortVis: A command-line sorting algorithm visualizer."};
     app.footer("Example: " + std::string(PROJECT_NAME) + " bubble --size 50 --delay 10\nTo interupt sort and exit press 'q'");
     app.fallthrough();
