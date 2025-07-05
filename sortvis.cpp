@@ -45,6 +45,12 @@ private:
         }
         attroff(A_BOLD);
     }
+
+    void updateCancellationStatus() {
+        if (isCancelled) return;
+        if (g_interruptSignaled) isCancelled = true;
+        else if (!this->noVis && getch() == 'q') isCancelled = true;
+    }
 public:
     ProgressReporter(bool noVis = false, size_t delay = 20) : noVis(noVis), animationDelay(delay) {
         if (!this->noVis) {
@@ -79,15 +85,9 @@ public:
     bool shouldContinue() const { return !isCancelled; }
 
     void printProgress(const std::vector<int> &vec, const std::optional<size_t> green = std::nullopt, const std::optional<size_t> blue = std::nullopt, const std::optional<size_t> red = std::nullopt, const std::optional<size_t> magenta = std::nullopt, const std::optional<size_t> yellow = std::nullopt) {
-        if (g_interruptSignaled) {
-            isCancelled = true;
-            return;
-        }
+        updateCancellationStatus();
+        if (isCancelled) return;
         if (!this->noVis) {
-            if (getch() == 'q') {
-                isCancelled = true;
-                return;
-            }
             if (vectorSize == 0) vectorSize = vec.size();
             mvprintw(0, 0, "%s sort - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisons, swaps, accesses);
             printNumberBar();
