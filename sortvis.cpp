@@ -91,9 +91,8 @@ public:
             if (vectorSize == 0) vectorSize = vec.size();
             mvprintw(0, 0, "%s sort - %zu comparisons, %zu swaps, %zu array accesses", sortName.c_str(), comparisons, swaps, accesses);
             printNumberBar();
-            chtype highlightAttr;
-            size_t barHeight, emptyHeight;
             for (size_t i = 0; i <  vectorSize; ++i) {
+                chtype highlightAttr;
                 if (green == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_GREEN);
                 else if (blue == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_BLUE);
                 else if (red == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_RED);
@@ -101,8 +100,8 @@ public:
                 else if (yellow == i) highlightAttr = COLOR_PAIR(HIGHLIGHT_YELLOW);
                 else highlightAttr = COLOR_PAIR(HIGHLIGHT_WHITE);
 
-                barHeight = vec[i];
-                emptyHeight = vectorSize - barHeight;
+                size_t barHeight = vec[i];
+                size_t emptyHeight = vectorSize - barHeight;
 
                 attrset(highlightAttr);
                 for (size_t j = emptyHeight; j <= vectorSize; ++j) mvprintw(j, i*2, "[]");
@@ -193,9 +192,8 @@ std::vector<int> generateShuffledVector(size_t size, std::optional<int> seed) {
 
 void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter) {
     size_t vectorSize = vec.size();
-    bool swapped = false;
     for (size_t i = 0; i < vectorSize-1; ++i) {
-        swapped = false;
+        bool swapped = false;
         for (size_t j = 0; j < vectorSize-1-i; ++j) {
             reporter.printProgress(vec, j, i, j+1);
             if (!reporter.shouldContinue()) return;
@@ -215,11 +213,10 @@ void bubbleSort(std::vector<int> &vec, ProgressReporter& reporter) {
 
 void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
     size_t vectorSize = vec.size();
-    bool swapped;
     size_t left = 0;
     size_t right = vectorSize - 1;
     while (left <= right) {
-        swapped = false;
+        bool swapped = false;
         for (size_t i = left; i < right; ++i) {
             reporter.printProgress(vec, -1, i, i+1, -1, -1);
             if (!reporter.shouldContinue()) return;
@@ -255,10 +252,9 @@ void shakerSort(std::vector<int> &vec, ProgressReporter& reporter) {
 
 void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
     size_t vectorSize = vec.size();
-    size_t minIndex;
     size_t lastSwapedIndex = vectorSize;
     for (size_t i = 0; i < vectorSize-1; ++i) {
-        minIndex = i;
+        size_t minIndex = i;
         for (size_t j = i + 1; j < vectorSize; ++j) {
             reporter.printProgress(vec, lastSwapedIndex, minIndex, j);
             if (!reporter.shouldContinue()) return;
@@ -278,12 +274,11 @@ void selectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
 
 void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
     size_t vectorSize = vec.size();
-    size_t minIndex, maxIndex;
     size_t lastSwapedMinIndex = vectorSize;
     size_t lastSwapedMaxIndex = vectorSize;
     for (size_t i = 0; i < vectorSize/2+1; ++i) {
-        minIndex = i;
-        maxIndex = i;
+        size_t minIndex = i;
+        size_t maxIndex = i;
         for (size_t j = i; j < vectorSize - i; ++j) {
             reporter.printProgress(vec, lastSwapedMinIndex, minIndex, j, maxIndex, lastSwapedMaxIndex);
             if (!reporter.shouldContinue()) return;
@@ -311,11 +306,10 @@ void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter) {
 
 void insertionSort(std::vector<int> &vec, ProgressReporter& reporter) {
     size_t vectorSize = vec.size();
-    int key, j;
     for (size_t i = 1; i < vectorSize; ++i) {
-        key = vec[i];
+        int key = vec[i];
         reporter.addArrayAccess();
-        j = i - 1;
+        int j = i - 1;
         while (j >= 0 && vec[j] > key) {
             reporter.addComparison();
             reporter.addArrayAccess();
