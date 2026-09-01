@@ -120,6 +120,7 @@ void shakerSort(std::vector<int> &vec, ProgressReporter& reporter);
 void selectionSort(std::vector<int> &vec, ProgressReporter& reporter);
 void doubleSelectionSort(std::vector<int> &vec, ProgressReporter& reporter);
 void insertionSort(std::vector<int> &vec, ProgressReporter& reporter);
+void iCantBelieveItCanSort(std::vector<int> &vec, ProgressReporter& reporter);
 
 int main(int argc, char **argv) {
     signal(SIGINT, signalHandler);
@@ -139,6 +140,7 @@ int main(int argc, char **argv) {
     sortFunctions["selection"] = selectionSort;
     sortFunctions["double-selection"] = doubleSelectionSort;
     sortFunctions["insertion"] = insertionSort;
+    sortFunctions["ICantBelieveItCanSort"] = iCantBelieveItCanSort;
 
     app.require_subcommand(1);
     for (auto const& [name, func] : sortFunctions) {
@@ -326,6 +328,26 @@ void insertionSort(std::vector<int> &vec, ProgressReporter& reporter) {
         }
         vec[j+1] = key;
         reporter.addArrayAccess();
+    }
+    if (reporter.shouldContinue()) reporter.printProgress(vec);
+}
+
+void iCantBelieveItCanSort(std::vector<int> &vec, ProgressReporter& reporter) {
+    size_t vectorSize = vec.size();
+    for (size_t i = 0; i < vectorSize; ++i) {
+        for (size_t j = 0; j < vectorSize; ++j) {
+            reporter.printProgress(vec, j, i);
+            if (!reporter.shouldContinue()) return;
+            reporter.addComparison();
+            reporter.addArrayAccess(2);
+            if (vec[i] < vec[j]) {
+                std::swap(vec[i], vec[j]);
+                reporter.addSwap();
+                reporter.addArrayAccess(4);
+                reporter.printProgress(vec, std::nullopt, std::nullopt, j, i);
+                if (!reporter.shouldContinue()) return;
+            }
+        }
     }
     if (reporter.shouldContinue()) reporter.printProgress(vec);
 }
